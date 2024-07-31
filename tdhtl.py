@@ -308,57 +308,6 @@ class TDHTLExperiment:
         
         print(f"Mean accuracy: {self.mean_accuracy:.4f}")
         print(f"Standard deviation of accuracy: {self.std_accuracy:.4f}")
-        
-
-class STDLExperiment:
-    def __init__(self, num_repeats=10, test_size=0.2, dicnum=50, max_iter=30, 
-                 tol=1e-6,
-                 nonzero_ratio_s=0.8, random_state=None):
-        self.num_repeats = num_repeats
-        self.test_size = test_size
-        self.random_state = random_state
-        self.dicnum=dicnum
-        self.nonzero_ratio_s=nonzero_ratio_s
-        self.max_iter=max_iter
-        self.tol=tol
-        
-        self.accuracies_s = []
-        
-    def stdl_experiment(self, trains, label_train, tests, label_test):
-        
-        mymodel = TLDL(n_components=self.dicnum, max_iter=self.max_iter, 
-                       tol=self.tol, nonzero_level_s=self.nonzero_ratio_s
-                       )    
-        mymodel.source_fit(trains, label_train)
-        
-        # Prediction
-        _, acc_s = mymodel.predict(tests, mymodel.Source_dict, label_test, Domain="S")
-       
-        return acc_s
-        
-    def run_experiments(self, datas, labels):
-        
-        for i in range(self.num_repeats):
-            train_idx, test_idx, label_train, label_test = train_test_split(
-                np.arange(labels.shape[0]), labels, test_size=self.test_size, random_state=i)
-
-            trains = datas[:, :, train_idx]
-            tests = datas[:, :, test_idx]
-
-            accuracys = self.stdl_experiment(trains, 
-                                        label_train, tests, label_test)
-            
-            self.accuracies_s.append(accuracys)
-            
-            
-        self.calculate_statistics(self.accuracies_s)
-
-    def calculate_statistics(self, accuracies):
-        self.mean_accuracy = np.mean(accuracies)
-        self.std_accuracy = np.std(accuracies)
-        
-        print(f"Mean accuracy: {self.mean_accuracy:.4f}")
-        print(f"Standard deviation of accuracy: {self.std_accuracy:.4f}")
 
 
 # 使用示例
@@ -381,11 +330,4 @@ if __name__ == "__main__":
     
     np.save('TDHTL_target_Results.npy', experiment.accuracies_t)
     
-    # experiment = STDLExperiment(num_repeats=10, test_size=0.2, dicnum=50, max_iter=30, 
-    #               tol=1e-6,
-    #               nonzero_ratio_s=0.3)
-    # experiment.run_experiments(adjdata, labels)
-
-    # np.save('STDL_target_Results.npy', experiment.accuracies_s)
     
-
