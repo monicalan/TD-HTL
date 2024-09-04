@@ -262,10 +262,9 @@ class TDHTLExperiment:
         self.max_iter=max_iter
         self.tol=tol
         
-        self.accuracies_s = []
         self.accuracies_t = []
         
-    def tdhtl_experiment(self, trains, traint, label_train, tests, testt, label_test):
+    def tdhtl_experiment(self, trains, traint, label_train, testt, label_test):
         
         mymodel = TLDL(n_components=self.dicnum, max_iter=self.max_iter, 
                        tol=self.tol, nonzero_level_s=self.nonzero_ratio_s, 
@@ -275,10 +274,9 @@ class TDHTLExperiment:
         mymodel.target_fit(traint, label_train, mymodel.Source_dict)
         
         # Prediction
-        _, acc_s = mymodel.predict(tests, mymodel.Source_dict, label_test, Domain="S")
         _, acc_t = mymodel.predict(testt, mymodel.Target_dict, label_test, Domain="T")
         
-        return acc_s, acc_t
+        return acc_t
         
     def run_experiments(self, datas, datat, labels):
         
@@ -287,19 +285,15 @@ class TDHTLExperiment:
                 np.arange(labels.shape[0]), labels, test_size=self.test_size, random_state=i)
 
             trains = datas[:, :, train_idx]
-            tests = datas[:, :, test_idx]
             
             traint = datat[:, :, train_idx]
             testt = datat[:, :, test_idx]
 
-            accuracys, accuracyt = self.tdhtl_experiment(trains, traint, 
-                                        label_train, tests, testt, label_test)
+            accuracyt = self.tdhtl_experiment(trains, traint, 
+                                        label_train, testt, label_test)
             
-            self.accuracies_s.append(accuracys)
             self.accuracies_t.append(accuracyt)
             
-            
-        self.calculate_statistics(self.accuracies_s)
         self.calculate_statistics(self.accuracies_t)
 
     def calculate_statistics(self, accuracies):
@@ -325,8 +319,6 @@ if __name__ == "__main__":
                   tol=1e-6,
                   nonzero_ratio_s=0.8, nonzero_ratio_t=0.9, random_state=None)
     experiment.run_experiments(sigdata, adjdata, labels)
-    
-    np.save('STDL_source_Results.npy', experiment.accuracies_s)
     
     np.save('TDHTL_target_Results.npy', experiment.accuracies_t)
     
