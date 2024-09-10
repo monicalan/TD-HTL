@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import linear_model 
 from sklearn.metrics import accuracy_score
 from numpy.linalg import norm
+from sklearn.model_selection import StratifiedKFold
 
 class DataLoad(object):
     
@@ -279,20 +280,29 @@ class TDHTLExperiment:
         return acc_t
         
     def run_experiments(self, datas, datat, labels):
-        
+
         for i in range(self.num_repeats):
-            train_idx, test_idx, label_train, label_test = train_test_split(
-                np.arange(labels.shape[0]), labels, test_size=self.test_size, random_state=i)
+            skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=i)
+            idx_list = []
+            for idx in skf.split(np.zeros(len(labels)), labels):
+                idx_list.append(idx)
+            acc_cv = 0
+            for cv in range(5):
+                train_idx, test_idx = idx_list[cv]
+                
+                label_train = labels[train_idx]
+                label_test = labels[test_idx]
+                
+                trains = datas[:, :, train_idx]
+                
+                traint = datat[:, :, train_idx]
+                testt = datat[:, :, test_idx]
 
-            trains = datas[:, :, train_idx]
-            
-            traint = datat[:, :, train_idx]
-            testt = datat[:, :, test_idx]
-
-            accuracyt = self.tdhtl_experiment(trains, traint, 
+                accuracyt = self.tdhtl_experiment(trains, traint, 
                                         label_train, testt, label_test)
-            
-            self.accuracies_t.append(accuracyt)
+                acc_cv = acc_cv + accuracyt
+
+             self.accuracies_t.append(acc_cv/5)
             
         self.calculate_statistics(self.accuracies_t)
 
